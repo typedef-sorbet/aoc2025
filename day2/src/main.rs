@@ -22,11 +22,33 @@ impl IDRange {
         //     }
         // ).collect()
 
-        // Valid for Step 2
-        let Ok(repeat_regex) = Regex::new(r"^(\d+)\1+$") else { return Vec::new() };
+        // Valid for Step 2 (but feels like cheating)
+        // let Ok(repeat_regex) = Regex::new(r"^(\d+)\1+$") else { return Vec::new() };
 
+        // (self.start..=self.end).filter(
+        //     |i| repeat_regex.find(i.to_string().as_str()).is_ok_and(|o| o.is_some())
+        // ).collect()
+
+        // Valid for Step 2 (self-rolled, horrifying)
         (self.start..=self.end).filter(
-            |i| repeat_regex.find(i.to_string().as_str()).is_ok_and(|o| o.is_some())
+            |i| {
+                let i_str = i.to_string();
+                let i_len = i_str.clone().len();
+                for factor in (1..=i_len/2).filter(|n| i_len % n == 0) {
+                    let chunks = i_str.clone().chars().chunks(factor).into_iter()
+                                    .map(|cs| cs.collect::<Vec<char>>())
+                                    .collect::<Vec<Vec<char>>>();
+                    let head = chunks[0].clone();
+
+                    if chunks.iter().all(|c| *c == head) {
+                        // println!("Invalid ID {}; chunk length {}, chunk = {:?}", i, factor, head);
+                        return true;
+                    }
+                }
+
+                // println!("ID {} is fine", i);
+                return false;
+            }
         ).collect()
     }
 }
